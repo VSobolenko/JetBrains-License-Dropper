@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using Microsoft.Win32;
 
 namespace Eval
@@ -17,6 +18,11 @@ namespace Eval
     
     internal class JetBrainsLicenseReset
     {
+        private readonly List<string> _tempFolders = new List<string>
+        {
+            Path.GetTempPath(),
+        };
+        
         private readonly List<Tuple<string, string>> _folderPosition = new List<Tuple<string, string>>
         {
             new Tuple<string, string>(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "JetBrains"),
@@ -35,6 +41,10 @@ namespace Eval
             new Tuple<RegistryKeyType, string>(RegistryKeyType.Users, @"S-1-5-21-3093079274-4027988934-4014703911-1001\SOFTWARE\JavaSoft\Prefs\jetbrains"),
         };
 
+        private readonly Action<string> _log;
+
+        public JetBrainsLicenseReset(Action<string> log) => _log = log;
+        
         #region Folder
 
         public bool ClearFolderMemory() => ClearFolderMemory(_folderPosition);
@@ -50,12 +60,54 @@ namespace Eval
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Error delete key:{pathToFolder} in path:{folderName} with exception: {e.Message}");
+                    Log($"[Folder][Error] Delete key:{pathToFolder} in path:{folderName} with exception: {e.Message}");
                     allPathsDelete = false;
                 }
             }
 
             return allPathsDelete;
+        }
+
+        public bool ClearTempFiles() => ClearFolderInsides(_tempFolders);
+        
+        private bool ClearFolderInsides(IEnumerable<string> positions)
+        {
+            foreach (var position in positions)
+            {
+                var directoryInfo = new DirectoryInfo(position);
+
+                foreach (FileInfo file in directoryInfo.GetFiles())
+                {
+                    try
+                    {
+                        var filePath = Path.Combine(file.Name);
+#if ENABLE_DELETE_ACTION
+                        file.Delete(); 
+#endif
+                        Log($"[Folder][Success] Delete file: {filePath}");
+                    }
+                    catch (Exception e)
+                    {
+                        Log($"[Folder][Error] Delete file: {e.Message}");
+                    } 
+                }
+                foreach (DirectoryInfo directory in directoryInfo.GetDirectories())
+                {
+                    try
+                    {
+                        var directoryPath = directory.FullName;
+#if ENABLE_DELETE_ACTION
+                        directory.Delete(true);
+#endif
+                        Log($"[Folder][Success] Delete file: {directoryPath}");
+                    }
+                    catch (Exception e)
+                    {
+                        Log($"[Folder][Error] Delete error: {e.Message}");
+                    }
+                }
+            }
+            return true;
         }
         
         private bool DeleteFolder(string pathToFOlder, string folder)
@@ -63,9 +115,7 @@ namespace Eval
             var path = Path.Combine(pathToFOlder, folder);
             if (Directory.Exists(path) == false) 
                 return false;
-#if ENABLE_LOG
-            Console.WriteLine($"[Folder]Delete key path:{path}");
-#endif
+            Log($"[Folder][Success] Delete key path:{path}");
             
 #if ENABLE_DELETE_ACTION
             Directory.Delete(path);
@@ -92,7 +142,7 @@ namespace Eval
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Error delete key:{position.Item1} in path:{position.Item2} with exception: {e.Message}");
+                    Log($"[Registry][Error] Delete key:{position.Item1} in path:{position.Item2} with exception: {e.Message}");
                     allPathsDelete = false;
                 }
             }
@@ -104,9 +154,7 @@ namespace Eval
         {
             using (var key = GetRegistryKeyByType(registryKeyType))
             {
-#if ENABLE_LOG
-                Console.WriteLine($"[Registry]Delete key path:{path}");
-#endif
+                Log($"[Registry][Success] Delete key path:{path}");
                 
 #if ENABLE_DELETE_ACTION
                 key.DeleteSubKeyTree(path);
@@ -114,6 +162,7 @@ namespace Eval
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private RegistryKey GetRegistryKeyByType(RegistryKeyType registryKeyType)
         {
             switch (registryKeyType)
@@ -128,5 +177,13 @@ namespace Eval
         }
 
         #endregion
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void Log(string message)
+        {
+#if ENABLE_LOG
+            _log?.Invoke(message);
+#endif
+        }
     }
 }
