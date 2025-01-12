@@ -13,6 +13,7 @@ Removes all JetBrains product settings. All successful and unsuccessful actions 
 - Keymap (Now only VS-copy)
 - Recent Solutions
 - Trusted Solutions
+- External Tools
 
 ## Control:
 - "yes" - execute the cleaning step

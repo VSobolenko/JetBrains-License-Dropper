@@ -40,6 +40,11 @@ namespace Eval
                 Path = $@"{AppDataFolder}\JetBrains\Rider2021.1\options",
                 Name = @"trustedSolutions.xml"
             },
+            new FileData()
+            {
+                Path = $@"{AppDataFolder}\JetBrains\Rider2021.1\tools",
+                Name = @"External Tools.xml"
+            },
         };
 
         private readonly List<FolderData> _folderPosition = new List<FolderData>
