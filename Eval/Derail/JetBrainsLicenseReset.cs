@@ -6,7 +6,8 @@ namespace Eval
 {
     internal class JetBrainsLicenseReset
     {
-        private static readonly string AppDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        private static readonly string AppDataFolder =
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
         private readonly List<FileData> _keepFiles = new List<FileData>
         {
@@ -39,6 +40,11 @@ namespace Eval
             {
                 Path = $@"{AppDataFolder}\JetBrains\Rider2021.1\options",
                 Name = @"trustedSolutions.xml"
+            },
+            new FileData()
+            {
+                Path = $@"{AppDataFolder}\JetBrains\Rider2021.1\options",
+                Name = @"codeLens.xml"
             },
             new FileData()
             {
