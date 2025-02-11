@@ -9,7 +9,7 @@
         <AppDesignerFolder>Properties</AppDesignerFolder>
         <RootNamespace>Eval</RootNamespace>
         <AssemblyName>Reset JetBrains License</AssemblyName>
-        <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+        <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
         <ApplicationIcon>Icon.ico</ApplicationIcon>
     </PropertyGroup>
@@ -20,6 +20,7 @@
         <Optimize>false</Optimize>
         <OutputPath>bin\Debug\</OutputPath>
         <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <DefineConstants>FEATURE_DELETION_PROTECTION</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
         <Prefer32bit>false</Prefer32bit>

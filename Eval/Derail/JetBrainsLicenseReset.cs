@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using Microsoft.Win32;
 
-namespace Eval
+namespace Eval.Derail
 {
     internal class JetBrainsLicenseReset
     {
         private static readonly string AppDataFolder =
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
+        private static readonly string LocalAppDataFolder =
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        
         private readonly List<FileData> _keepFiles = new List<FileData>
         {
             new FileData()
@@ -62,7 +65,8 @@ namespace Eval
             },
             new FolderData
             {
-                Source = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Folder = "JetBrains"
+                Source = LocalAppDataFolder, 
+                Folder = "JetBrains"
             },
         };
 

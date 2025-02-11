@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Eval
+namespace Eval.Derail
 {
     public class DirectoryManager
     {
@@ -16,9 +16,7 @@ namespace Eval
         {
             var allPathsDelete = true;
             foreach (var position in positions)
-            {
                 allPathsDelete = DeleteFolder(position.GetPath());
-            }
 
             return allPathsDelete;
         }
@@ -44,7 +42,9 @@ namespace Eval
                 return false;
 
             _log($"[Folder][Success] Delete key path: {path2Folder}");
+#if !FEATURE_DELETION_PROTECTION
             Directory.Delete(path2Folder, true);
+#endif
             return true;
         }
 
@@ -63,7 +63,9 @@ namespace Eval
             }
             _keepFiles[fileName] = file;
 
+#if !FEATURE_DELETION_PROTECTION
             File.Move(file.SourcePosition, file.TempPosition);
+#endif
         }
 
         public IEnumerable<FileTransfer> ReturnFilesToSourcePositions()
@@ -71,11 +73,16 @@ namespace Eval
             foreach (var file in _keepFiles)
             {
                 var folder = file.Value.SourceDirectory;
+                
+#if !FEATURE_DELETION_PROTECTION
                 if (Directory.Exists(folder) == false)
                     Directory.CreateDirectory(folder);
+#endif
                 
                 _log($"[Folder][Success] Save file: \"{file.Key}\" in path: {file.Value.SourcePosition}");
+#if !FEATURE_DELETION_PROTECTION
                 File.Move(file.Value.TempPosition, file.Value.SourcePosition);
+#endif
             }
 
             var transfers = _keepFiles.Select(x => x.Value);
@@ -91,7 +98,9 @@ namespace Eval
             {
                 try
                 {
+#if !FEATURE_DELETION_PROTECTION
                     File.Delete(file);
+#endif
                     _log($"[Folder][Success] Delete file: {file}");
                 }
                 catch (Exception e)
@@ -104,7 +113,9 @@ namespace Eval
             {
                 try
                 {
+#if !FEATURE_DELETION_PROTECTION
                     Directory.Delete(directory, true);
+#endif
                     _log($"[Folder][Success] Delete directory: {directory}");
                 }
                 catch (Exception e)

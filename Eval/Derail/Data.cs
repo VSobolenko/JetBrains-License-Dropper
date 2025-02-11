@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using Microsoft.Win32;
 
-namespace Eval
+namespace Eval.Derail
 {
     internal struct FileData
     {

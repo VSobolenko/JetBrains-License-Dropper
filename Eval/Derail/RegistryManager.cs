@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.Win32;
 
-namespace Eval
+namespace Eval.Derail
 {
     public class RegistryManager
     {
@@ -32,8 +32,10 @@ namespace Eval
 
         private void DeleteRegistryKey(RegistryKey registryKeyType, string path)
         {
+#if !FEATURE_DELETION_PROTECTION
             using (registryKeyType)
                 registryKeyType.DeleteSubKeyTree(path);
+#endif
 
             _log($"[Registry][Success] Delete key path:{path}");
         }

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Eval
+namespace Eval.Derail
 {
     public class LicenseHandler
     {
