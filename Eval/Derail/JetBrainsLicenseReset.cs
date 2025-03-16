@@ -11,66 +11,30 @@ namespace Eval.Derail
 
         private static readonly string LocalAppDataFolder =
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        
-        private readonly List<FileData> _keepFiles = new List<FileData>
+
+        private readonly List<FileSystemEntry> _keepFiles = new List<FileSystemEntry>
         {
-            new FileData()
-            {
-                Path = $@"{AppDataFolder}\JetBrains\Rider2021.1\keymaps",
-                Name = @"Visual Studio copy.xml"
-            },
-            new FileData
-            {
-                Path = $@"{AppDataFolder}\JetBrains\Rider2021.1\resharper-host",
-                Name = @"GlobalSettingsStorage.DotSettings"
-            },
-            new FileData()
-            {
-                Path = $@"{AppDataFolder}\JetBrains\Rider2021.1\options",
-                Name = @"keymap.xml"
-            },
-            new FileData()
-            {
-                Path = $@"{AppDataFolder}\JetBrains\Rider2021.1\options",
-                Name = @"recentSolutions.xml"
-            },
-            new FileData()
-            {
-                Path = $@"{AppDataFolder}\JetBrains\Rider2021.1\options",
-                Name = @"recentSolutionsConfiguration.xml"
-            },
-            new FileData()
-            {
-                Path = $@"{AppDataFolder}\JetBrains\Rider2021.1\options",
-                Name = @"trustedSolutions.xml"
-            },
-            new FileData()
-            {
-                Path = $@"{AppDataFolder}\JetBrains\Rider2021.1\options",
-                Name = @"codeLens.xml"
-            },
-            new FileData()
-            {
-                Path = $@"{AppDataFolder}\JetBrains\Rider2021.1\tools",
-                Name = @"External Tools.xml"
-            },
+            new($@"{AppDataFolder}\JetBrains\Rider2021.1\keymaps\Visual Studio copy.xml"),
+            new($@"{AppDataFolder}\JetBrains\Rider2021.1\resharper-host\GlobalSettingsStorage.DotSettings"),
+            new($@"{AppDataFolder}\JetBrains\Rider2021.1\options\keymap.xml"),
+            new($@"{AppDataFolder}\JetBrains\Rider2021.1\options\recentSolutions.xml"),
+            new($@"{AppDataFolder}\JetBrains\Rider2021.1\options\recentSolutionsConfiguration.xml"),
+            new($@"{AppDataFolder}\JetBrains\Rider2021.1\options\trustedSolutions.xml"),
+            new($@"{AppDataFolder}\JetBrains\Rider2021.1\tools\External Tools.xml"),
         };
 
-        private readonly List<FolderData> _folderPosition = new List<FolderData>
+        private readonly List<FileSystemEntry> _keepFolders = new List<FileSystemEntry>
         {
-            new FolderData
-            {
-                Source = AppDataFolder,
-                Folder = "JetBrains"
-            },
-            new FolderData
-            {
-                Source = LocalAppDataFolder, 
-                Folder = "JetBrains"
-            },
+            new($@"{AppDataFolder}\JetBrains\Rider2021.1\filetypes"),
         };
 
-        private readonly List<RegistryData> _registryPosition = new List<RegistryData>
+        private readonly List<FileSystemEntry> _deletableFolderPosition = new List<FileSystemEntry>
+        {
+            new($@"{AppDataFolder}\JetBrains"),
+            new($@"{LocalAppDataFolder}\JetBrains"),
+        };
+
+        private readonly List<RegistryData> _deletableRegistryPosition = new List<RegistryData>
         {
             new RegistryData {RegistryKeyType = Registry.CurrentUser, Path = @"SOFTWARE\JetBrains"},
             new RegistryData
@@ -81,7 +45,7 @@ namespace Eval.Derail
         };
 
 
-        private readonly List<RegistryData> _registrySpecialJavaFolderPosition = new List<RegistryData>
+        private readonly List<RegistryData> _deletableRegistrySpecialJavaFolderPosition = new List<RegistryData>
         {
             new RegistryData
             {
@@ -108,15 +72,21 @@ namespace Eval.Derail
         {
             foreach (var fileData in _keepFiles)
                 _directory.KeepFile(fileData.Path, fileData.Name);
-            var result = _directory.ClearFolders(_folderPosition);
+            foreach (var folderData in _keepFolders)
+                _directory.KeepFolder(folderData.Source, folderData.Name);
+
+            var result = _directory.ClearFolders(_deletableFolderPosition);
+
+            _directory.ReturnFoldersToSourcePositions();
             _directory.ReturnFilesToSourcePositions();
             return result;
         }
 
         public bool ClearTempFiles() => _directory.ClearTempFiles();
 
-        public bool ClearRegistryMemory() => _registry.ClearRegistryMemory(_registryPosition);
+        public bool ClearRegistryMemory() => _registry.ClearRegistryMemory(_deletableRegistryPosition);
 
-        public bool ClearSpecialJavaMemory() => _registry.ClearRegistryMemory(_registrySpecialJavaFolderPosition);
+        public bool ClearSpecialJavaMemory() =>
+            _registry.ClearRegistryMemory(_deletableRegistrySpecialJavaFolderPosition);
     }
 }

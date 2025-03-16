@@ -5,18 +5,21 @@ using System.Linq;
 
 namespace Eval.Derail
 {
-    public class DirectoryManager
+    internal class DirectoryManager
     {
         private readonly Action<string> _log;
-        private readonly Dictionary<string, FileTransfer> _keepFiles = new Dictionary<string, FileTransfer>();
+
+        private readonly Dictionary<string, RootObjectTransfer> _keepFiles = new();
+
+        private readonly Dictionary<string, RootObjectTransfer> _keepDirectories = new();
 
         public DirectoryManager(Action<string> log) => _log = log;
 
-        public bool ClearFolders(IEnumerable<FolderData> positions)
+        public bool ClearFolders(IEnumerable<FileSystemEntry> positions)
         {
             var allPathsDelete = true;
             foreach (var position in positions)
-                allPathsDelete = DeleteFolder(position.GetPath());
+                allPathsDelete = DeleteFolder(position.Path);
 
             return allPathsDelete;
         }
@@ -36,21 +39,19 @@ namespace Eval.Derail
             return true;
         }
 
-        private bool DeleteDirectory(string path2Folder)
+        private void DeleteDirectory(string path2Folder)
         {
-            if (Directory.Exists(path2Folder) == false)
-                return false;
+            if (Directory.Exists(path2Folder) == false) return;
 
             _log($"[Folder][Success] Delete key path: {path2Folder}");
 #if !FEATURE_DELETION_PROTECTION
             Directory.Delete(path2Folder, true);
 #endif
-            return true;
         }
 
         public void KeepFile(string folderPath, string fileName)
         {
-            var file = new FileTransfer
+            var file = new RootObjectTransfer
             {
                 SourceDirectory = folderPath,
                 SourcePosition = Path.Combine(folderPath, fileName),
@@ -61,27 +62,50 @@ namespace Eval.Derail
                 _log($"[Folder][Error] File Not Found: {file.SourcePosition}");
                 return;
             }
-            _keepFiles[fileName] = file;
+
+            _keepFiles[file.SourcePosition] = file;
 
 #if !FEATURE_DELETION_PROTECTION
             File.Move(file.SourcePosition, file.TempPosition);
 #endif
         }
 
-        public IEnumerable<FileTransfer> ReturnFilesToSourcePositions()
+        public void KeepFolder(string solderSource, string folderName)
         {
-            foreach (var file in _keepFiles)
+            var directory = new RootObjectTransfer
             {
-                var folder = file.Value.SourceDirectory;
-                
+                SourceDirectory = solderSource,
+                SourcePosition = Path.Combine(solderSource, folderName),
+                TempPosition = Path.Combine(Path.GetTempPath(), folderName),
+            };
+
+            if (Directory.Exists(directory.SourcePosition) == false)
+            {
+                _log($"[Folder][Error] Folder Not Found: {directory.SourcePosition}");
+                return;
+            }
+
+            _keepDirectories[directory.SourcePosition] = directory;
+
+
+#if !FEATURE_DELETION_PROTECTION
+            Directory.Move(directory.SourcePosition, directory.TempPosition);
+#endif
+        }
+
+        public IEnumerable<RootObjectTransfer> ReturnFilesToSourcePositions()
+        {
+            foreach (var filePosition in _keepFiles)
+            {
+                var folder = filePosition.Value.SourceDirectory;
+                var fileName = Path.GetFileName(filePosition.Key);
+
+                _log($"[Folder][Success] Save file: \"{fileName}\" in path: {filePosition.Value.SourcePosition}");
 #if !FEATURE_DELETION_PROTECTION
                 if (Directory.Exists(folder) == false)
                     Directory.CreateDirectory(folder);
-#endif
-                
-                _log($"[Folder][Success] Save file: \"{file.Key}\" in path: {file.Value.SourcePosition}");
-#if !FEATURE_DELETION_PROTECTION
-                File.Move(file.Value.TempPosition, file.Value.SourcePosition);
+
+                File.Move(filePosition.Value.TempPosition, filePosition.Value.SourcePosition);
 #endif
             }
 
@@ -89,6 +113,25 @@ namespace Eval.Derail
             _keepFiles.Clear();
             return transfers;
         }
+
+        public void ReturnFoldersToSourcePositions()
+        {
+            foreach (var folderPosition in _keepDirectories)
+            {
+                var folderName = Path.GetFileName(folderPosition.Value.SourcePosition);
+                var from = folderPosition.Value.TempPosition;
+                var to = folderPosition.Value.SourcePosition;
+
+                _log($"[Folder][Success] Save folder: \"{folderName}\" in path: {to}");
+#if !FEATURE_DELETION_PROTECTION
+                if (Directory.Exists(folderPosition.Value.SourceDirectory) == false)
+                    Directory.CreateDirectory(folderPosition.Value.SourceDirectory);
+
+                Directory.Move(from, to ?? throw new Exception("Unknown Path"));
+#endif
+            }
+        }
+
 
         public bool ClearTempFiles()
         {
@@ -128,7 +171,7 @@ namespace Eval.Derail
         }
     }
 
-    public struct FileTransfer
+    public struct RootObjectTransfer
     {
         public string SourceDirectory;
         public string SourcePosition;

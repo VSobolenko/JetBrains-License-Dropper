@@ -1,20 +1,17 @@
-﻿using System.IO;
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 
 namespace Eval.Derail
 {
-    internal struct FileData
+    internal readonly struct FileSystemEntry
     {
-        public string Path;
-        public string Name;
-    }
+        public string Path { get; }
+        public string Source => System.IO.Path.GetDirectoryName(Path);
+        public string Name => System.IO.Path.GetFileName(Path);
 
-    public struct FolderData
-    {
-        public string Source;
-        public string Folder;
-
-        public string GetPath() => Path.Combine(Source, Folder);
+        public FileSystemEntry(string path)
+        {
+            Path = path;
+        }
     }
 
     public struct RegistryData

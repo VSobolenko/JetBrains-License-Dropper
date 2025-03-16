@@ -15,6 +15,7 @@ The following settings will be **retained**:
 - **Recent Solutions**  
 - **Trusted Solutions**  
 - **External Tools**  
+- **File Types**
 
 ## Usage:  
 During the cleanup process, you will be prompted to confirm each step:  

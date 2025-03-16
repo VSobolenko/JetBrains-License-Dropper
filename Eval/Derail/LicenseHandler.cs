@@ -6,7 +6,7 @@ namespace Eval.Derail
     {
         public void Start(Action<string> log)
         {
-            if (!IsRunResetLicense())
+            if (IsRunResetLicense() == false)
             {
                 log("Reset skipped");
                 Console.ReadKey();
@@ -19,11 +19,11 @@ namespace Eval.Derail
             }
             catch (Exception e)
             {
-                log?.Invoke($"Error reset eval with exception: {e.Message}");
+                log?.Invoke($"Error reset eval with exception: {e.Message}; Stack trace:{e.StackTrace}");
             }
         }
 
-        private void ResetLicense(Action<string> log)
+        private static void ResetLicense(Action<string> log)
         {
             var jetbrainsData = new JetBrainsLicenseReset(log);
 
@@ -44,7 +44,7 @@ namespace Eval.Derail
         {
             if (condition.Invoke() == false)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
+                Console.ForegroundColor = ConsoleColor.Blue;
 
                 log($"[Skip] {description}");
                 Console.ForegroundColor = ConsoleColor.White;
@@ -63,32 +63,18 @@ namespace Eval.Derail
             Console.ForegroundColor = ConsoleColor.White;
         }
 
-        private static bool IsClearSpecialJavaMemory()
-        {
-            Console.WriteLine("(yes/no) Clean up special folders from java? (if it didn't work without it)");
+        private static bool IsClearSpecialJavaMemory() =>
+            UserConsent("(yes/no) Clean up special folders from java? (if it didn't work without it)");
 
+        private static bool IsRunResetLicense() => UserConsent("(yes/no) Reset license?");
+        private static bool IsClearAllTempFiles() => UserConsent("(yes/no) Clear all temp files? (desirable)?");
+
+        private static bool UserConsent(string description)
+        {
+            Console.WriteLine(description);
             return IsUserAgreed();
         }
 
-        private static bool IsRunResetLicense()
-        {
-            Console.WriteLine("(yes/no) Reset license?\n");
-
-            return IsUserAgreed();
-        }
-
-        private static bool IsClearAllTempFiles()
-        {
-            Console.WriteLine("(yes/no) Clear all temp files? (desirable)?");
-
-            return IsUserAgreed();
-        }
-
-        private static bool IsUserAgreed()
-        {
-            var userInput = Console.ReadLine();
-
-            return userInput == "yes";
-        }
+        private static bool IsUserAgreed() => Console.ReadLine() == "yes";
     }
 }

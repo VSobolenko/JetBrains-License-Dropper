@@ -3,15 +3,15 @@ using Eval.Derail;
 
 namespace Eval
 {
-internal static class Program
-{
-    public static void Main()
+    internal static class Program
     {
-        Action<string> log = Console.WriteLine;
+        public static void Main()
+        {
+            Action<string> log = Console.WriteLine;
 
-        new LicenseHandler().Start(log);
+            new LicenseHandler().Start(log);
 
-        Console.ReadKey();
+            Console.ReadKey();
+        }
     }
-}
 }
